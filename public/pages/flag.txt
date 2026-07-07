@@ -1,0 +1,2 @@
+// app/api/page-view/route.js is already created.
+// This is a note file - the actual route is at app/api/page-view/route.js

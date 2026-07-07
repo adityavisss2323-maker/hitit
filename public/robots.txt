@@ -1,0 +1,12 @@
+# robots.txt
+# VULN: Exposes sensitive internal paths
+User-agent: *
+Disallow: /admin
+Disallow: /api/backup
+Disallow: /api/debug
+Disallow: /api/internal
+Disallow: /api/admin
+Disallow: /api/flags
+
+# Sitemap
+Sitemap: /sitemap.xml

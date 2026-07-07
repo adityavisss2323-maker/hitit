@@ -1,0 +1,5 @@
+This application is intentionally vulnerable for educational purposes only.
+Do not deploy it on the public internet.
+
+VulnMarket - CTF Practice Application
+Version: 1.0.0
