@@ -1,12 +1,14 @@
 'use client';
 // app/profile/[id]/page.js
 // VULN: IDOR - loads any user profile by ID without ownership check
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 
-export default function ProfilePage({ params }) {
-  const resolvedParams = use(params);
+export default function ProfilePage() {
+  const params = useParams();
+  const id = params.id;
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -15,11 +17,13 @@ export default function ProfilePage({ params }) {
   const [saveMsg, setSaveMsg] = useState('');
 
   useEffect(() => {
+    if (!id) return;
+
     const token = localStorage.getItem('token');
     
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`/api/profile/${resolvedParams.id}`, {
+        const res = await fetch(`/api/profile/${id}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         const text = await res.text();
@@ -51,13 +55,13 @@ export default function ProfilePage({ params }) {
     };
     
     fetchProfile();
-  }, [resolvedParams.id]);
+  }, [id]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`/api/profile/${resolvedParams.id}`, {
+      const res = await fetch(`/api/profile/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(form),

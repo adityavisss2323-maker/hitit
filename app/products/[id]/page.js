@@ -1,13 +1,15 @@
 'use client';
 // app/products/[id]/page.js
 // VULN: DOM XSS via URL hash fragment
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import ReviewSection from '../../../components/ReviewSection';
 
-export default function ProductDetailPage({ params }) {
-  const resolvedParams = use(params);
+export default function ProductDetailPage() {
+  const params = useParams();
+  const id = params.id;
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -16,9 +18,11 @@ export default function ProductDetailPage({ params }) {
   const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
+    if (!id) return;
+
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`/api/products/${resolvedParams.id}`);
+        const res = await fetch(`/api/products/${id}`);
         const text = await res.text();
         let data;
         try {
@@ -60,7 +64,7 @@ export default function ProductDetailPage({ params }) {
     handleShare(); // Run on mount too
 
     return () => window.removeEventListener('hashchange', handleShare);
-  }, [resolvedParams.id]);
+  }, [id]);
 
   const addToCart = () => {
     if (!product) return;
