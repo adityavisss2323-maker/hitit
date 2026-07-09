@@ -9,7 +9,6 @@ export async function GET(request, { params }) {
 
   try {
     // VULN: IDOR - no check that requesting user owns this profile
-    // Any authenticated or unauthenticated user can access any profile
     const user = await prisma.user.findUnique({
       where: { id: parseInt(id) },
       select: {
@@ -17,34 +16,35 @@ export async function GET(request, { params }) {
         username: true,
         email: true,
         role: true,
-        creditCard: true,  // VULN: Credit card exposed
-        resetToken: true,  // VULN: Reset token exposed
+        creditCard: true,
+        resetToken: true,
         createdAt: true,
       },
     });
 
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-    // VULN: Flag 3 hint - embed flag value in user 2 (alice) profile
-    const responseData = { user };
+    // Fix: Ensure dates are strings to avoid React child object errors on the frontend if accidentally rendered
+    const cleanUser = {
+      ...user,
+      createdAt: user.createdAt ? user.createdAt.toISOString() : null,
+    };
+
+    const responseData = { user: cleanUser };
     if (parseInt(id) === 2) {
       responseData._debug = 'FLAG{1d0r_3xp0s3d_us3r_d4t4}';
     }
 
     return NextResponse.json(responseData);
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Internal error' }, { status: 500 });
   }
 }
 
 export async function PUT(request, { params }) {
   const { id } = await params;
-  // VULN: No CSRF protection; no ownership check
   const currentUser = getCurrentUser(request);
   if (!currentUser) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-
-  // VULN: Does not verify currentUser.id === parseInt(id)
-  // Any authenticated user can update any profile
 
   try {
     const body = await request.json();
@@ -56,8 +56,13 @@ export async function PUT(request, { params }) {
       select: { id: true, username: true, email: true, role: true, creditCard: true, createdAt: true },
     });
 
-    return NextResponse.json({ user: updated });
+    return NextResponse.json({ 
+      user: {
+        ...updated,
+        createdAt: updated.createdAt ? updated.createdAt.toISOString() : null,
+      } 
+    });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Update failed' }, { status: 500 });
   }
 }
